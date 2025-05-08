@@ -172,3 +172,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# JetBrains IDEs
+.idea/
+
+# Mac
+.DS_Store
+
+# Data
+impl/data/*.csv

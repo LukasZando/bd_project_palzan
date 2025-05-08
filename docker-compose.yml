@@ -1,0 +1,73 @@
+services:
+  elasticsearch:
+    image: elasticsearch:8.18.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  kibana:
+    image: kibana:8.18.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+  spark:
+    build:
+      context: ./spark_docker
+      dockerfile: Dockerfile
+    container_name: spark
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+      - LD_PRELOAD=/opt/bitnami/common/lib/libnss_wrapper.so
+      - NSS_WRAPPER_PASSWD=/opt/bitnami/spark/tmp/nss_passwd
+      - NSS_WRAPPER_GROUP=/opt/bitnami/spark/tmp/nss_group
+
+    ports:
+      - '8080:8080'
+      - '7077:7077'
+    volumes:
+      - ./impl:/opt/bitnami/spark-app
+      - ./nss/nss_passwd:/opt/bitnami/spark/tmp/nss_passwd
+      - ./nss/nss_group:/opt/bitnami/spark/tmp/nss_group
+    depends_on:
+      - elasticsearch
+
+  spark-worker:
+    build:
+      context: ./spark_docker
+      dockerfile: Dockerfile
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=spark
+    volumes:
+      - ./impl:/opt/bitnami/spark-app
+
+volumes:
+  esdata:
+    driver: local
