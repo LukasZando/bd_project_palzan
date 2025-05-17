@@ -26,7 +26,16 @@ if [ $? -ne 0 ]; then
   exit 2
 fi
 
-# Execute the Spark job
+start_time=$(date +%s)
+
 docker exec -it "$CONTAINER_NAME" spark-submit \
   --conf spark.jars.ivy="$IVY_CACHE" \
   "$SPARK_APP_PATH/$SCRIPT_NAME"
+
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+
+minutes=$((duration / 60))
+seconds=$((duration % 60))
+
+printf "Execution time: %02d:%02d (mm:ss)\n" "$minutes" "$seconds"
