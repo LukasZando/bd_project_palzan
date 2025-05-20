@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import to_date, col, count, date_format, length, to_utc_timestamp
+from pyspark.sql.functions import to_date, col, date_format, to_utc_timestamp
 from pyspark.sql.functions import udf, concat_ws, to_timestamp
 from pyspark.sql.types import StringType
 
@@ -19,14 +19,6 @@ path = f"{basedir}/data/Parking_Violations_Issued_Fiscal_Year_2014.csv"
 
 df = spark.read.csv(path, header=True, inferSchema=True)
 df.cache()
-
-df = df.withColumnRenamed("Plate ID", "plate_id")
-df = df.withColumnRenamed("Street Name", "street_name")
-df = df.withColumnRenamed("Violation Code", "violation_code")
-df = df.withColumn("Issue Date", date_format(to_date(col("Issue Date"), "MM/dd/yyyy"), "yyyy-MM-dd"))
-df = df.withColumnRenamed("Issue Date", "issue_date")
-df = df.withColumnRenamed("Violation Time", "violation_time")
-
 
 ###
 # Helper
@@ -59,6 +51,13 @@ def drop_duplicates_based_on_columns(df, columns: list):
 
     return df
 
+df = df.withColumnRenamed("Plate ID", "plate_id")
+df = df.withColumnRenamed("Street Name", "street_name")
+df = df.withColumnRenamed("Violation Code", "violation_code")
+df = df.withColumn("Issue Date", date_format(to_date(col("Issue Date"), "MM/dd/yyyy"), "yyyy-MM-dd"))
+df = df.withColumnRenamed("Issue Date", "issue_date")
+df = df.withColumnRenamed("Violation Time", "violation_time")
+
 
 ####
 # compute violation timestamp that is suitable for ES
@@ -71,7 +70,6 @@ df = df.withColumn(
     "violation_iso_timestamp",
     date_format(to_utc_timestamp(to_timestamp(concat_ws(" ", col("issue_date"), col("time_24hr"))), "UTC"), "yyyy-MM-dd'T'HH:mm:ss'Z'")
 )
-
 
 ###
 # Final df
