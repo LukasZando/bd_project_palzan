@@ -14,13 +14,17 @@ sc = spark.sparkContext
 path = f"{basedir}/data/Parking_Violations_Issued_Fiscal_Year_2014.csv"
 
 df = spark.read.csv(path)
+print("------------------------")
+print(df.rdd.getNumPartitions())
+print("------------------------")
 # df.show(5)
 
-df.write.format("org.elasticsearch.spark.sql")\
-    .option("es.nodes", "http://elasticsearch:9200")\
-    .option("es.nodes.discovery", "false")\
-    .option("es.nodes.wan.only", "true")\
-    .option("es.index.auto.create", "true")\
-    .save("test_index")
+# df.write.format("org.elasticsearch.spark.sql")\
+#     .option("es.nodes", "http://elasticsearch:9200")\
+#     .option("es.nodes.discovery", "false")\
+#     .option("es.nodes.wan.only", "true")\
+#     .option("es.index.auto.create", "true")\
+#     .mode("overwrite")\
+#     .save("test_index")
 
 spark.stop()
